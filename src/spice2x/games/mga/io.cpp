@@ -8,22 +8,22 @@ std::vector<Button> &games::mga::get_buttons() {
 
         GameAPI::Buttons::sortButtons(
                 &buttons,
-                "Service",
-                "Test",
-                "Coin Mech",
-                "Start",
-                "Top",
-                "Front Top",
-                "Front Bottom",
-                "Side Left",
-                "Side Right",
-                "Side Lever",
-                "Trigger Button",
-                "Switch Button",
-                "Joy Forwards",
-                "Joy Backwards",
-                "Joy Left",
-                "Joy Right"
+                "Add Coin",
+                "Test Menu",
+                "",
+                "Start Button",
+                "Change View (FPS/TPS)",
+                "Steady Aim",
+                "Kneel + Roll + Scope",
+                "Use Item (option 1)",
+                "Use Item (option 2)",
+                "Reload",
+                "Fire Weapon",
+                "Cycle Weapon",
+                "Walk Forwards",
+                "Walk Backwards",
+                "Walk Left",
+                "Walk Right"
         );
     }
 

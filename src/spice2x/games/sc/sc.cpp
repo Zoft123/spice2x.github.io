@@ -72,7 +72,7 @@ public:
             touch_attach_dx_hook();
 
             // cursor
-            if (!is_touch_available("TwTouchDevice::open")) {
+            if (!is_touch_available()) {
                 ShowCursor(true);
             }
         }

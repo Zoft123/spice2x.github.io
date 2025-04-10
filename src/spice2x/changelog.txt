@@ -1,13 +1,3 @@
-04/08/2025 [spice2x]
-    Ensure rawinput touch is default for all games (-wintouch to override)
-    Various overlay UI fixes and improvements, update ImGui library
-    Add missing lights in Museca
-
-03/29/2025 [spice2x]
-    Add SDVX landscape mode, -forceresswap option
-    Fix bugs in image scaler
-    Configurator UI tweaks
-
 03/25/2025 [spice2x]
     Add Mahjong Fight Girl support
     Add option for custom full screen resolution (-forceres)

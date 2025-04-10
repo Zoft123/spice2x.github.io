@@ -178,11 +178,9 @@ namespace overlay::windows {
                     static_cast<int>(ImGui::GetIO().DisplaySize.x),
                     static_cast<int>(ImGui::GetIO().DisplaySize.y));
 
-            if (ImGui::Button("ImGui Debug Log")) {
-                overlay::SHOW_DEBUG_LOG_WINDOW = !overlay::SHOW_DEBUG_LOG_WINDOW;
-            }
-
-            // removed for size (IMGUI_DISABLE_DEMO_WINDOWS)
+            // removed for size (along with setting IMGUI_DISABLE_DEMO_WINDOWS
+            // and IMGUI_DISABLE_DEBUG_TOOLS) - saves about 300kb in each
+            // binary
 
             // metrics button
             // this->metrics_open |= ImGui::Button("Metrics Window");
@@ -751,7 +749,7 @@ namespace overlay::windows {
         if (ImGui::CollapsingHeader("Touch")) {
 
             // status
-            ImGui::Text("Status: %s", is_touch_available("Control::touch_view") ? "available" : "unavailable");
+            ImGui::Text("Status: %s", is_touch_available() ? "available" : "unavailable");
 
             // touch points
             ImGui::SetNextItemOpen(true, ImGuiCond_Once);

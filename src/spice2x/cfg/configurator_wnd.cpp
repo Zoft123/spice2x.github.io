@@ -29,7 +29,7 @@ cfg::ConfiguratorWindow::ConfiguratorWindow() {
 
     // determine window title
     if (cfg::CONFIGURATOR_TYPE == cfg::ConfigType::Config) {
-        WINDOW_TITLE = "spice2x config (" + to_string(VERSION_STRING_CFG) + ")";
+        WINDOW_TITLE = "spiceMGA config (" + to_string(VERSION_STRING_CFG) + ")";
         WINDOW_SIZE_X = 800;
         WINDOW_SIZE_Y = 600;
     }

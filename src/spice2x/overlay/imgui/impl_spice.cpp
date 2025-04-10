@@ -2,7 +2,6 @@
 
 #include <windows.h>
 
-#include "cfg/configurator.h"
 #include "games/io.h"
 #include "launcher/launcher.h"
 #include "launcher/superexit.h"
@@ -12,16 +11,6 @@
 #include "touch/touch.h"
 #include "util/logging.h"
 #include "util/utils.h"
-
-#if !defined(IMGUI_ENABLE_WIN32_DEFAULT_IME_FUNCTIONS) || \
-    !defined(IMGUI_DISABLE_DEFAULT_ALLOCATORS) || \
-    !defined(IMGUI_USE_BGRA_PACKED_COLOR) || \
-    !defined(IMGUI_HAS_VIEWPORT) || \
-    !defined(IMGUI_HAS_DOCK) || \
-    !defined(IMGUI_DISABLE_DEMO_WINDOWS) || \
-    defined(IMGUI_DISABLE_DEBUG_TOOLS)
-#error "fix imconfig.h after updating imgui version"
-#endif
 
 // state
 static HWND g_hWnd = nullptr;
@@ -53,7 +42,6 @@ bool ImGui_ImplSpice_Init(HWND hWnd) {
     io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
     io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
     io.BackendPlatformName = "imgui_impl_spice";
-    io.ConfigErrorRecoveryEnableTooltip = true;
 
     // keyboard mapping
     io.KeyMap[ImGuiKey_Tab] = VK_TAB;
@@ -71,7 +59,7 @@ bool ImGui_ImplSpice_Init(HWND hWnd) {
     io.KeyMap[ImGuiKey_Space] = VK_SPACE;
     io.KeyMap[ImGuiKey_Enter] = VK_RETURN;
     io.KeyMap[ImGuiKey_Escape] = VK_ESCAPE;
-    io.KeyMap[ImGuiKey_KeypadEnter] = VK_RETURN;
+    io.KeyMap[ImGuiKey_KeyPadEnter] = VK_RETURN;
     io.KeyMap[ImGuiKey_A] = 'A';
     io.KeyMap[ImGuiKey_C] = 'C';
     io.KeyMap[ImGuiKey_V] = 'V';
@@ -361,6 +349,27 @@ void ImGui_ImplSpice_NewFrame() {
         }
     }
 
+    // navigator input
+    auto buttons = games::get_buttons_overlay(eamuse_get_game());
+    if (buttons && (!overlay::OVERLAY || overlay::OVERLAY->hotkeys_triggered())) {
+        struct {
+            size_t index;
+            Button &btn;
+        } NAV_MAPPING[] = {
+                { ImGuiNavInput_Activate, buttons->at(games::OverlayButtons::NavigatorActivate )},
+                { ImGuiNavInput_Cancel, buttons->at(games::OverlayButtons::NavigatorCancel) },
+                { ImGuiNavInput_DpadUp, buttons->at(games::OverlayButtons::NavigatorUp) },
+                { ImGuiNavInput_DpadDown, buttons->at(games::OverlayButtons::NavigatorDown) },
+                { ImGuiNavInput_DpadLeft, buttons->at(games::OverlayButtons::NavigatorLeft) },
+                { ImGuiNavInput_DpadRight, buttons->at(games::OverlayButtons::NavigatorRight) },
+        };
+        for (auto mapping : NAV_MAPPING) {
+            if (GameAPI::Buttons::getState(RI_MGR, mapping.btn)) {
+                io.NavInputs[mapping.index] = 1;
+            }
+        }
+    }
+
     // set mouse wheel
     auto mouse_diff = mouse_wheel - mouse_wheel_last;
     mouse_wheel_last = mouse_wheel;
@@ -369,27 +378,10 @@ void ImGui_ImplSpice_NewFrame() {
     // update OS mouse position
     ImGui_ImplSpice_UpdateMousePos();
 
-    if (cfg::CONFIGURATOR_STANDALONE) {
-        // if cursor is inside the client area, always set the OS cursor to what ImGui wants
-        // this is to deal with cases where mouse cursor changes outside the client rect and comes
-        // back into the window
-        // i'm sure there might be better ways to deal with this but this works so whatever, right?
-        RECT client_rect;
-        if (GetClientRect(g_hWnd, &client_rect)) {
-            POINT cursor;
-            if (GetCursorPos(&cursor) && ScreenToClient(g_hWnd, &cursor)) {
-                if (client_rect.left < cursor.x && cursor.x < client_rect.right &&
-                    client_rect.top < cursor.y && cursor.y < client_rect.bottom) {
-                    ImGui_ImplSpice_UpdateMouseCursor();
-                }
-            }
-        }
-    } else {
-        // update OS mouse cursor with the cursor requested by imgui
-        ImGuiMouseCursor mouse_cursor = io.MouseDrawCursor ? ImGuiMouseCursor_None : ImGui::GetMouseCursor();
-        if (g_LastMouseCursor != mouse_cursor) {
-            g_LastMouseCursor = mouse_cursor;
-            ImGui_ImplSpice_UpdateMouseCursor();
-        }
+    // update OS mouse cursor with the cursor requested by imgui
+    ImGuiMouseCursor mouse_cursor = io.MouseDrawCursor ? ImGuiMouseCursor_None : ImGui::GetMouseCursor();
+    if (g_LastMouseCursor != mouse_cursor) {
+        g_LastMouseCursor = mouse_cursor;
+        ImGui_ImplSpice_UpdateMouseCursor();
     }
 }

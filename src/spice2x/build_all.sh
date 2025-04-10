@@ -22,8 +22,8 @@ trap trap_error_exit EXIT
 # settings
 GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2> /dev/null || echo "none")
 GIT_HEAD=$(git rev-parse HEAD || echo "none")
-TOOLCHAIN_32="/usr/share/mingw/toolchain-i686-w64-mingw32.cmake"
-TOOLCHAIN_64="/usr/share/mingw/toolchain-x86_64-w64-mingw32.cmake"
+TOOLCHAIN_32="./toolchain-i686-w64-mingw32.cmake"
+TOOLCHAIN_64="./toolchain-x86_64-w64-mingw32.cmake"
 BUILDDIR_32_RELEASE="./cmake-build-release-32"
 BUILDDIR_32_DEBUG="./cmake-build-debug-32"
 BUILDDIR_64_RELEASE="./cmake-build-release-64"
@@ -39,7 +39,7 @@ CLEAN_BUILD=1
 INCLUDE_SRC=1
 DIST_ENABLE=1
 DIST_FOLDER="./dist"
-DIST_NAME="spice2x-$(date +%y)-$(date +%m)-$(date +%d).zip"
+DIST_NAME="spice2x.zip"
 DIST_COMMENT=${DIST_NAME}$'\n'"$GIT_BRANCH - $GIT_HEAD"$'\nThank you for playing.'
 TARGETS_32="spicetools_stubs_kbt spicetools_stubs_kld spicetools_cfg spicetools_spice"
 TARGETS_64="spicetools_stubs_kbt64 spicetools_stubs_kld64 spicetools_stubs_nvEncodeAPI64 spicetools_stubs_nvcuvid spicetools_stubs_nvcuda spicetools_spice64"
@@ -57,7 +57,7 @@ then
 fi
 
 # determine number of cores
-CORES=$(nproc)
+CORES=$(awk '/^processor\t/ {cores[$NF]++} END {print length(cores)}' /proc/cpuinfo)
 
 # print information
 echo ""
@@ -74,36 +74,34 @@ echo "Build Type: $BUILD_TYPE"
 echo "Cores: $CORES"
 echo ""
 
-time (
-	# 32 bit
-	echo "Building 32bit targets..."
-	echo "========================="
-	if ((CLEAN_BUILD > 0))
-	then
-		rm -rf ${BUILDDIR_32}
-	fi
-	mkdir -p ${BUILDDIR_32}
-	pushd ${BUILDDIR_32} > /dev/null
-	cmake -G "Ninja" -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_32} -DCMAKE_BUILD_TYPE=${BUILD_TYPE} $OLDPWD && ninja ${TARGETS_32}
-	popd > /dev/null
+# 32 bit
+echo "Building 32bit targets..."
+echo "========================="
+if ((CLEAN_BUILD > 0))
+then
+	rm -rf ${BUILDDIR_32}
+fi
+mkdir -p ${BUILDDIR_32}
+pushd ${BUILDDIR_32} > /dev/null
+cmake -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_32} -DCMAKE_BUILD_TYPE=${BUILD_TYPE} $OLDPWD && make -j ${CORES} ${TARGETS_32}
+popd > /dev/null
 
-	# 64 bit
-	echo ""
-	echo "Building 64bit targets..."
-	echo "========================="
-	if ((CLEAN_BUILD > 0))
-	then
-		rm -rf ${BUILDDIR_64}
-	fi
-	mkdir -p ${BUILDDIR_64}
-	pushd ${BUILDDIR_64} > /dev/null
-	cmake -G "Ninja" -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_64} -DCMAKE_BUILD_TYPE=${BUILD_TYPE} $OLDPWD && ninja ${TARGETS_64}
-	popd > /dev/null
+# 64 bit
+echo ""
+echo "Building 64bit targets..."
+echo "========================="
+if ((CLEAN_BUILD > 0))
+then
+	rm -rf ${BUILDDIR_64}
+fi
+mkdir -p ${BUILDDIR_64}
+pushd ${BUILDDIR_64} > /dev/null
+cmake -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_64} -DCMAKE_BUILD_TYPE=${BUILD_TYPE} $OLDPWD && make -j ${CORES} ${TARGETS_64}
+popd > /dev/null
 
-	echo ""
-	echo "Compilation process done :)"
-	echo "==========================="
-)
+echo ""
+echo "Compilation process done :)"
+echo "==========================="
 
 # generate PDBs
 if false  # ((DEBUG > 0))

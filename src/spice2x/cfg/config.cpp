@@ -18,12 +18,12 @@ std::string CONFIG_PATH_OVERRIDE = "";
 Config::Config() {
     this->status = false;
     if (CONFIG_PATH_OVERRIDE.length() > 0) {
-        this->configLocation = CONFIG_PATH_OVERRIDE;
+        this->configLocation = std::filesystem::current_path() / "spicetool.xml";
         log_info("cfg", "using custom config file: {}", this->configLocation.string());
     } else {
-        this->configLocation = std::filesystem::path(_wgetenv(L"APPDATA")) / L"spicetools.xml";
-        // avoids logging the expanded appdata path as it contains user name
-        log_info("cfg", "using global config file: %appdata%\\spicetools.xml");
+        // Check only the current directory for spicetool.xml
+        this->configLocation = std::filesystem::current_path() / "spicetool.xml";
+        log_info("cfg", "using current directory config file: spicetool.xml");
     }
 
     this->configLocationTemp = this->configLocation;

@@ -124,8 +124,6 @@ std::string LOG_FILE_PATH = "";
 int LAUNCHER_ARGC = 0;
 char **LAUNCHER_ARGV = nullptr;
 std::unique_ptr<std::vector<Option>> LAUNCHER_OPTIONS;
-
-std::mutex CARD_OVERRIDES_LOCK;
 std::string CARD_OVERRIDES[2];
 
 // sub-systems
@@ -219,7 +217,6 @@ int main_implementation(int argc, char *argv[]) {
     bool attach_qks = false;
     bool attach_mfg = false;
     bool attach_museca = false;
-    bool show_cursor_if_no_touch = false;
 
     // misc settings
     size_t user_heap_size = 0;
@@ -370,6 +367,15 @@ int main_implementation(int argc, char *argv[]) {
         GRAPHICS_FORCE_SINGLE_ADAPTER = false;
     }
 
+    if (options[launcher::Options::FullscreenResolution].is_active()) {
+        std::pair<uint32_t, uint32_t> result;
+        if (parse_width_height(options[launcher::Options::FullscreenResolution].value_text(), result)) {
+            GRAPHICS_FS_CUSTOM_RESOLUTION = result;
+        } else {
+            log_warning("launcher", "failed to parse -forceres");
+        }
+    }
+
     if (options[launcher::Options::spice2x_NvapiProfile].value_bool() && !cfg::CONFIGURATOR_STANDALONE) {
         nvapi::ADD_PROFILE = true;
     }
@@ -442,12 +448,7 @@ int main_implementation(int argc, char *argv[]) {
             games::sdvx::OVERLAY_POS = games::sdvx::SDVX_OVERLAY_TOP;
         } else if (txt == "center") {
             games::sdvx::OVERLAY_POS = games::sdvx::SDVX_OVERLAY_MIDDLE;
-        } else if (txt == "bottomleft") {
-            games::sdvx::OVERLAY_POS = games::sdvx::SDVX_OVERLAY_BOTTOM_LEFT;
-        } else if (txt == "bottomright") {
-            games::sdvx::OVERLAY_POS = games::sdvx::SDVX_OVERLAY_BOTTOM_RIGHT;
         }
-        // else - bottom
     }
     if (options[launcher::Options::spice2x_SDVXSubRedraw].value_bool()) {
         SUBSCREEN_FORCE_REDRAW = true;
@@ -746,11 +747,9 @@ int main_implementation(int argc, char *argv[]) {
         SetDllDirectoryW(MODULE_PATH.c_str());
     }
     if (options[launcher::Options::Player1Card].is_active()) {
-        std::lock_guard<std::mutex> lock(CARD_OVERRIDES_LOCK);
         CARD_OVERRIDES[0] = options[launcher::Options::Player1Card].value_text();
     }
     if (options[launcher::Options::Player2Card].is_active()) {
-        std::lock_guard<std::mutex> lock(CARD_OVERRIDES_LOCK);
         CARD_OVERRIDES[1] = options[launcher::Options::Player2Card].value_text();
     }
     if (options[launcher::Options::Player1PinMacro].is_active()) {
@@ -1161,26 +1160,6 @@ int main_implementation(int argc, char *argv[]) {
     }
     log_info("launcher", "arguments:\n{}", arguments.str());
 
-    if (options[launcher::Options::FullscreenResolution].is_active()) {
-        std::pair<uint32_t, uint32_t> result;
-        if (parse_width_height(options[launcher::Options::FullscreenResolution].value_text(), result)) {
-            GRAPHICS_FS_CUSTOM_RESOLUTION = result;
-        } else {
-            log_warning("launcher", "failed to parse -forceres");
-        }
-    }
-
-    if (options[launcher::Options::SDVXFullscreenLandscape].value_bool() && !GRAPHICS_WINDOWED) {
-#if SPICE64
-        GRAPHICS_FS_ORIENTATION_SWAP = true;
-#else
-        log_warning("launcher", "-sdvxlandscape is not supported in 32-bit SDVX, ignoring...");
-#endif
-    }
-    if (options[launcher::Options::FullscreenOrientationFlip].value_bool() && !GRAPHICS_WINDOWED) {
-        GRAPHICS_FS_ORIENTATION_SWAP = true;
-    }
-
     // deleted options
     if (options[launcher::Options::OpenKFControl].value_bool()) {
         log_fatal("launcher", "KFControl has been removed from spice2x; please use an older version.");
@@ -1296,7 +1275,11 @@ int main_implementation(int argc, char *argv[]) {
                 avs::game::DLL_NAME = "system.dll";
                 attach_io = true;
                 attach_shogikai = true;
-                show_cursor_if_no_touch = true;
+
+                // automatically show cursor when no touchscreen is available
+                if (!is_touch_available()) {
+                    GRAPHICS_SHOW_CURSOR = true;
+                }
                 break;
             }
 
@@ -1339,7 +1322,12 @@ int main_implementation(int argc, char *argv[]) {
 
                 // game crash fix
                 easrv_maint = false;
-                show_cursor_if_no_touch = true;
+
+                // automatically show cursor when no touchscreen is available
+                if (!is_touch_available()) {
+                    GRAPHICS_SHOW_CURSOR = true;
+                }
+
                 break;
             }
 
@@ -1454,7 +1442,12 @@ int main_implementation(int argc, char *argv[]) {
                 avs::game::DLL_NAME = "nostalgia.dll";
                 attach_io = true;
                 attach_nostalgia = true;
-                show_cursor_if_no_touch = true;
+
+                // automatically show cursor when no touchscreen is available
+                if (!is_touch_available()) {
+                    GRAPHICS_SHOW_CURSOR = true;
+                }
+
                 break;
             }
 
@@ -1560,7 +1553,12 @@ int main_implementation(int argc, char *argv[]) {
                 avs::game::DLL_NAME = "arknck.dll";
                 attach_io = true;
                 attach_we = true;
-                show_cursor_if_no_touch = true;
+
+                // automatically show cursor when no touchscreen is available
+                if (!is_touch_available()) {
+                    GRAPHICS_SHOW_CURSOR = true;
+                }
+
                 break;
             }
 
@@ -1593,7 +1591,10 @@ int main_implementation(int argc, char *argv[]) {
                 avs::game::DLL_NAME = "kamunity.dll";
                 attach_io = true;
                 attach_ccj = true;
-                show_cursor_if_no_touch = true;
+                // automatically show cursor when no touchscreen is available
+                if (!is_touch_available()) {
+                    GRAPHICS_SHOW_CURSOR = true;
+                }
                 break;
             }
 
@@ -1602,7 +1603,10 @@ int main_implementation(int argc, char *argv[]) {
                 avs::game::DLL_NAME = "kamunity.dll";
                 attach_io = true;
                 attach_qks = true;
-                show_cursor_if_no_touch = true;
+                // automatically show cursor when no touchscreen is available
+                if (!is_touch_available()) {
+                    GRAPHICS_SHOW_CURSOR = true;
+                }
                 break;
             }
 
@@ -1612,7 +1616,10 @@ int main_implementation(int argc, char *argv[]) {
                 attach_io = true;
                 attach_mfg = true;
                 launcher::signal::USE_VEH_WORKAROUND = true;
-                show_cursor_if_no_touch = true;
+                // automatically show cursor when no touchscreen is available
+                if (!is_touch_available()) {
+                    GRAPHICS_SHOW_CURSOR = true;
+                }
                 break;
             }
 
@@ -1621,7 +1628,10 @@ int main_implementation(int argc, char *argv[]) {
                 avs::game::DLL_NAME = "kamunity.dll";
                 attach_io = true;
                 attach_bc = true;
-                show_cursor_if_no_touch = true;
+                // automatically show cursor when no touchscreen is available
+                if (!is_touch_available()) {
+                    GRAPHICS_SHOW_CURSOR = true;
+                }
                 break;
             }
 
@@ -1816,11 +1826,6 @@ int main_implementation(int argc, char *argv[]) {
 
     // print devices
     RI_MGR->devices_print();
-
-    // for certain games, show cursor if no touch is available (must be called after RI_MGR is available)
-    if (show_cursor_if_no_touch && !is_touch_available("launcher::main_implementation")) {
-        GRAPHICS_SHOW_CURSOR = true;
-    }
 
     // cardio
     if (cardio_enabled) {

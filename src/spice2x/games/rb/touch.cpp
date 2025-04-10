@@ -86,7 +86,7 @@ bool games::rb::ReflecBeatTouchDeviceHandle::open(LPCWSTR lpFileName) {
     }
 
     // show cursor on window if mouse is used
-    if (!is_touch_available("ReflecBeatTouchDeviceHandle::open")) {
+    if (!is_touch_available()) {
         ShowCursor(TRUE);
     }
 

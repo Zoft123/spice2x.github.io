@@ -51,6 +51,7 @@ namespace overlay::windows {
         for (size_t i = 0; i < std::size(cfg::SCREENRESIZE->scene_settings); i++) {
             auto& scene = cfg::SCREENRESIZE->scene_settings[i];
             scene.keep_aspect_ratio = true;
+            scene.centered = true;
             scene.offset_x = 0;
             scene.offset_y = 0;
             scene.scale_x = 1.f;
@@ -125,28 +126,21 @@ namespace overlay::windows {
         auto& scene = cfg::SCREENRESIZE->scene_settings[cfg::SCREENRESIZE->screen_resize_current_scene];
 
         // general settings
-        ImGui::InputInt("X Offset", &scene.offset_x);
-        ImGui::SameLine();
-        ImGui::HelpMarker("Hint: ctrl + click on +/- buttons to move quickly.");
-        ImGui::InputInt("Y Offset", &scene.offset_y);
-        ImGui::SameLine();
-        ImGui::HelpMarker("Hint: ctrl + click on +/- buttons to move quickly.");
+        ImGui::Checkbox("Centered", &scene.centered);
+        if (!scene.centered) {
+            ImGui::InputInt("X Offset", &scene.offset_x);
+            ImGui::InputInt("Y Offset", &scene.offset_y);
+        }
 
         // aspect ratio
         ImGui::Checkbox("Keep Aspect Ratio", &scene.keep_aspect_ratio);
         if (scene.keep_aspect_ratio) {
-            if (ImGui::SliderFloat("Scale", &scene.scale_x, 0.5f, 2.5f)) {
+            if (ImGui::SliderFloat("Scale", &scene.scale_x, 0.65f, 2.0f)) {
                 scene.scale_y = scene.scale_x;
             }
-            ImGui::SameLine();
-            ImGui::HelpMarker("Hint: ctrl + click on the slider to type in a numeric value.");
         } else {
-            ImGui::SliderFloat("Width Scale", &scene.scale_x, 0.5f, 2.5f);
-            ImGui::SameLine();
-            ImGui::HelpMarker("Hint: ctrl + click on the slider to type in a numeric value.");
-            ImGui::SliderFloat("Height Scale", &scene.scale_y, 0.5f, 2.5f);
-            ImGui::SameLine();
-            ImGui::HelpMarker("Hint: ctrl + click on the slider to type in a numeric value.");
+            ImGui::SliderFloat("Width Scale", &scene.scale_x, 0.65f, 2.0f);
+            ImGui::SliderFloat("Height Scale", &scene.scale_y, 0.65f, 2.0f);
         }
 
         ImGui::EndDisabled();

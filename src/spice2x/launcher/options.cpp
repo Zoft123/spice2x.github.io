@@ -19,7 +19,6 @@ static const std::vector<std::string> CATEGORY_ORDER_BASIC = {
     "Network",
     "Overlay",
     "Graphics (Common)",
-    "Graphics (Full Screen)",
     "Graphics (Windowed)",
     "Audio",
 };
@@ -186,12 +185,9 @@ static const std::vector<OptionDefinition> OPTION_DEFINITIONS = {
     {
         .title = "Monitor",
         .name = "monitor",
-        .desc = "Sets the display that the game will be opened in, for multiple monitors.\n\n"
-            "0 is the primary monitor, 1 is the second monitor, and so on.\n\n"
-            "Not all games will respect this. Does not work at all with multi-monitor games like TDJ/UFC. "
-            "Disable Full Screen Optimizations for best results",
+        .desc = "Sets the display that the game will be opened in, for multiple monitors",
         .type = OptionType::Integer,
-        .category = "Graphics (Full Screen)",
+        .category = "Graphics (Common)",
     },
     {
         .title = "Only Use One Monitor",
@@ -199,7 +195,7 @@ static const std::vector<OptionDefinition> OPTION_DEFINITIONS = {
         .desc = "Force the graphics device to be opened utilizing only one adapter in multi-monitor systems.\n\n"
             "May cause unstable framerate and desyncs, especially if monitors have different refresh rates!",
         .type = OptionType::Bool,
-        .category = "Graphics (Full Screen)",
+        .category = "Graphics (Common)",
     },
     {
         .title = "Force Refresh Rate",
@@ -215,22 +211,10 @@ static const std::vector<OptionDefinition> OPTION_DEFINITIONS = {
         .desc =
             "For full screen mode, forcibly set a custom resolution.\n\n"
             "Works great for some games, but can COMPLETELY BREAK other games - YMMV!\n\n"
-            "If you are using -forceresswap/-sdvxlandscape, put the TARGET monitor resolution in this field.\n\n"
             "This should only be used as last resort if your GPU/monitor can't display the resolution required by the game",
         .type = OptionType::Text,
         .setting_name = "1280,720",
-        .category = "Graphics (Full Screen)"
-    },
-    {
-        // FullscreenOrientationFlip
-        .title = "Full Screen Orientation Swap",
-        .name = "forceresswap",
-        .desc =
-            "Allows you to play portrait games in in landscape (and vice versa) by transposing resolution and applying image scaling.\n\n"
-            "Works great for some games, but can COMPLETELY BREAK other games - YMMV!\n\n"
-            "Strongly consider combining this with -forceres option to render at monitor native resolution",
-        .type = OptionType::Bool,
-        .category = "Graphics (Full Screen)"
+        .category = "Graphics (Common)"
     },
     {
         // Graphics9On12
@@ -761,13 +745,7 @@ static const std::vector<OptionDefinition> OPTION_DEFINITIONS = {
         .type = OptionType::Enum,
         .game_name = "Sound Voltex",
         .category = "Overlay",
-        .elements = {
-            {"top", ""},
-            {"center", ""},
-            {"bottom", ""},
-            {"bottomleft", "for landscape"},
-            {"bottomright", "for landscape"},
-        },
+        .elements = {{"top", ""}, {"center", ""}, {"bottom", ""}},
     },
     {
         // spice2x_SDVXSubRedraw
@@ -2046,18 +2024,6 @@ static const std::vector<OptionDefinition> OPTION_DEFINITIONS = {
         .type = OptionType::Bool,
         .game_name = "Sound Voltex",
         .category = "Game Options",
-    },
-    {
-        // SDVXFullscreenLandscape
-        .title = "SDVX Landscape Mode (SDVX5+)",
-        .name = "sdvxlandscape",
-        .desc =
-            "Allows you to play in landscape by transposing resolution and applying image scaling.\n\n"
-            "Works only for SDVX5 and above! This is identical to -forceresswap.\n\n"
-            "Will launch at 1080p by default; strongly consider combining this with -forceres option to render at monitor native resolution",
-        .type = OptionType::Bool,
-        .game_name = "Sound Voltex",
-        .category = "Game Options"
     },
     {
         // spice2x_EnableSMXStage

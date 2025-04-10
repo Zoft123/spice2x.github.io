@@ -151,7 +151,7 @@ namespace overlay::windows {
             url_fetch_errors += fmt::format("WinHttpSendRequest failed: {}\n", gle);
             if (gle == 12175) {
                 url_fetch_errors += "\nThis is ERROR_WINHTTP_SECURE_FAILURE - most likely TLS 1.1 / TLS 1.2 error on old OS versions.\n\n";
-                url_fetch_errors += "Look up MSDN article on 'Update to enable TLS 1.1 and TLS 1.2 as default secure protocols in WinHTTP in Windows' for a fix.\n";
+                url_fetch_errors += "Look up MSDN article on 'Update to enable TLS 1.1 and TLS 1.2 as default secure protocols in WinHTTP in Windows' for a fix.";
             }
             return result;
         }
@@ -183,7 +183,7 @@ namespace overlay::windows {
                     statusCode,
                     netutils::http_status_reason_phrase(statusCode));
             if (statusCode == 404) {
-                url_fetch_errors += "(Patch server did not find any patches for this game version)\n";
+                url_fetch_errors += "(Patch server did not find any patches for this game version)";
             }
             return result;
         }
@@ -550,19 +550,13 @@ namespace overlay::windows {
             ImGui::Text("Failed to import patches from URL.");
             if (!url_fetch_errors.empty()) {
                 ImGui::TextUnformatted("");
-                ImGui::PushTextWrapPos(ImGui::GetIO().DisplaySize.x * 0.7);
+                ImGui::PushTextWrapPos(ImGui::GetIO().DisplaySize.x * 0.5);
                 ImGui::TextUnformatted(url_fetch_errors.c_str());
                 ImGui::PopTextWrapPos();
             }
             ImGui::Separator();
             if (ImGui::Button("OK")) {
                 ImGui::CloseCurrentPopup();
-            }
-            if (!url_fetch_errors.empty()) {
-                ImGui::SameLine();
-                if (ImGui::Button("Copy Error")) {
-                    clipboard::copy_text(url_fetch_errors);
-                }
             }
             ImGui::EndPopup();
         }
@@ -655,9 +649,17 @@ namespace overlay::windows {
 
                     // first column, part 1: help / caution marker
                     ImGui::TableNextColumn();
-                    if (!patch.caution.empty()) {
+                    const std::string description = patch.description;
+                    const std::string caution = patch.caution;
+                    if (!description.empty() && !caution.empty()) {
                         ImGui::AlignTextToFramePadding();
-                        ImGui::WarnMarker(patch.description.c_str(), patch.caution.c_str());
+                        ImGui::WarnMarker(description.c_str(), caution.c_str());
+                    } else if (!description.empty()) {
+                        ImGui::AlignTextToFramePadding();
+                        ImGui::HelpMarker(description.c_str());
+                    } else if (!caution.empty()) {
+                        ImGui::AlignTextToFramePadding();
+                        ImGui::WarnMarker(nullptr, caution.c_str());
                     } else {
                         ImGui::DummyMarker();
                     }
@@ -703,11 +705,6 @@ namespace overlay::windows {
                     if (style_color_pushed) {
                         ImGui::PopStyleColor(style_color_pushed);
                     }
-                    if (ImGui::IsItemHovered()) {
-                        show_patch_tooltip(patch);
-                    }
-
-                    // show range after label for integer patches
                     if (patch.type == PatchType::Integer) {
                         ImGui::SameLine();
                         auto& numpatch = patch.patch_number;
@@ -744,9 +741,6 @@ namespace overlay::windows {
                         patch.last_status = is_patch_active(patch);
                     }
                     ImGui::EndDisabled();
-                    if (ImGui::IsItemHovered()) {
-                        show_patch_tooltip(patch);
-                    }
 
                     // second column, part 2: additional options UI (dropdown, text input)
                     ImGui::SameLine();
@@ -773,9 +767,6 @@ namespace overlay::windows {
                                     }
                                     ImGui::EndCombo();
                                 }
-                                if (ImGui::IsItemHovered()) {
-                                    show_patch_tooltip(patch);
-                                }
                             } else if (patch.type == PatchType::Integer) {
                                 ImGui::SetNextItemWidth(200.0f);
                                 auto& numpatch = patch.patch_number;
@@ -788,9 +779,6 @@ namespace overlay::windows {
 
                                     apply_patch(patch, true);
                                     config_dirty = true;
-                                }
-                                if (ImGui::IsItemHovered()) {
-                                    show_patch_tooltip(patch);
                                 }
                             }
                         } else if (patch_status == PatchStatus::Disabled) {
@@ -806,9 +794,6 @@ namespace overlay::windows {
                                 ImGui::InputInt("##dummy_int_input", &patch.patch_number.value);
                             }
                             ImGui::EndDisabled();
-                            if (ImGui::IsItemHovered()) {
-                                show_patch_tooltip(patch);
-                            }
                         }
                     } else {
                         ImGui::AlignTextToFramePadding();
@@ -834,14 +819,6 @@ namespace overlay::windows {
 
                 ImGui::EndTable();
             }
-        }
-    }
-
-    void PatchManager::show_patch_tooltip(const PatchData& patch) {
-        if (!patch.caution.empty()) {
-            ImGui::WarnTooltip(patch.description.c_str(), patch.caution.c_str());
-        } else if (!patch.description.empty()) {
-            ImGui::HelpTooltip(patch.description.c_str());
         }
     }
 
@@ -1523,44 +1500,16 @@ namespace overlay::windows {
         try {
             auto patches_json = getFromUrl(dll_name, json_path);
             if (!patches_json.empty()) {
-
-                // see if this is valid JSON
-                Document doc_temp;
-                doc_temp.Parse(patches_json.c_str());
-                const auto error = doc_temp.GetParseError();
-                if (error) {
-                    log_warning(
-                        "patchmanager",
-                        "remotely fetched JSON file parse error: {}",
-                        rapidjson::GetParseError_En(error));
-                    url_fetch_errors += fmt::format(
-                            "Invalid JSON received from remote URL.\n"
-                            "Your DLL version might not be supported.\n"
-                            "URL: {}\n"
-                            "JSON Parse Error: {}\n",
-                            json_path,
-                            rapidjson::GetParseError_En(error));
-                    return false;
-                } else {
-                    log_info("patchmanager", "remotely fetched JSON was successfully parsed");
-                }
-
-                // create patches dir
-                if (!fileutils::dir_exists(LOCAL_PATCHES_PATH)) {
+                if (!fileutils::dir_exists(LOCAL_PATCHES_PATH))
                     fileutils::dir_create(LOCAL_PATCHES_PATH);
-                }
-                // save to file
                 std::filesystem::path save_path = LOCAL_PATCHES_PATH / (identifier + ".json");
                 fileutils::text_write(save_path, patches_json);
-                log_info("patchmanager", "remotely fetched JSON saved to: {}", save_path.string());
                 return true;
             } else {
                 log_warning("patchmanager", "failed to fetch patches JSON for {}", dll_name);
             }
         } catch (const std::exception& e) {
             log_warning("patchmanager", "exception occurred while loading remote patches JSON for {}: {}", dll_name, e.what());
-            url_fetch_errors += fmt::format(
-                "Exception while loading remote patches for {}: {}\n", dll_name, e.what());
         }
         return false;
     }

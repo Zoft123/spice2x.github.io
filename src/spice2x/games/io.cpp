@@ -271,12 +271,6 @@ namespace games {
         analogs.insert({ silentscope, silentscope::get_analogs() });
         file_hints[silentscope].emplace_back("arkndd.dll");
 
-        // charge machine
-        const std::string pcm("Charge Machine");
-        games.push_back(pcm);
-        buttons.insert({ pcm, pcm::get_buttons() });
-        file_hints[pcm].emplace_back("launch.dll");
-
         // ongaku paradise
         const std::string op("Ongaku Paradise");
         games.push_back(op);
@@ -460,6 +454,18 @@ namespace games {
         names.emplace_back("Screen Resize Scene 4");
         vkey_defaults.push_back(0xFF);
         names.emplace_back("Force Exit Game");
+        vkey_defaults.push_back(0xFF);
+        names.emplace_back("Navigator Activate");
+        vkey_defaults.push_back(0xFF);
+        names.emplace_back("Navigator Cancel");
+        vkey_defaults.push_back(0xFF);
+        names.emplace_back("Navigator Up");
+        vkey_defaults.push_back(0xFF);
+        names.emplace_back("Navigator Down");
+        vkey_defaults.push_back(0xFF);
+        names.emplace_back("Navigator Left");
+        vkey_defaults.push_back(0xFF);
+        names.emplace_back("Navigator Right");
         vkey_defaults.push_back(0xFF);
         names.emplace_back("Hotkey Enable 1");
         vkey_defaults.push_back(0xFF);

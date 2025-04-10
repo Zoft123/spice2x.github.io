@@ -26,7 +26,6 @@ namespace overlay {
     extern bool AUTO_SHOW_KEYPAD_P2;
     extern bool USE_WM_CHAR_FOR_IMGUI_CHAR_INPUT;
     extern bool FPS_SHOULD_FLIP;
-    extern bool SHOW_DEBUG_LOG_WINDOW;
 
     class SpiceOverlay {
     public:
@@ -129,7 +128,6 @@ namespace overlay {
         bool hotkey_toggle_last = false;
 
         void init();
-        void add_font(const char* font, ImFontConfig* config, const ImWchar* glyphs);
     };
 
     // global

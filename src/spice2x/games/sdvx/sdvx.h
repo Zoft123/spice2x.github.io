@@ -11,9 +11,7 @@ namespace games::sdvx {
     enum SdvxOverlayPosition {
         SDVX_OVERLAY_TOP,
         SDVX_OVERLAY_MIDDLE,
-        SDVX_OVERLAY_BOTTOM,
-        SDVX_OVERLAY_BOTTOM_LEFT,
-        SDVX_OVERLAY_BOTTOM_RIGHT
+        SDVX_OVERLAY_BOTTOM
     };
 
     // settings
